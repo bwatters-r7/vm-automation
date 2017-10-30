@@ -159,6 +159,8 @@ class esxiServer:
             for j in range(5):
                 ipAddress = i.getVmIp()
                 if ipAddress != None:
+                    if ':' in ipAddress: 
+                        self.logMsg("IPv6 ADDRESS DETECTED..... TRY AGAIN " + i.vmName + " = " + str(ipAddress))
                     break;
                 else:
                     self.logMsg("IP ADDRESS LOOKUP FAILED FOR " + i.vmName + " = " + str(ipAddress))
@@ -350,6 +352,7 @@ class esxiVm:
             for i in range(ipAttempts):
                 self.vmIp = self.vmObject.summary.guest.ipAddress
                 if self.vmIp != None:
+                    self.server.logMsg("IP ADDRESS ON  " + self.vmName + ": " + self.vmIp)
                     break
                 else:
                     strAttempt = "(ATTEMPT " + str(i) + " OF " + str(ipAttempts) + ")"
@@ -558,11 +561,14 @@ class esxiVm:
         if not asyncFlag:
             return self.waitForTask(snapshotTask)
         else:
-            return None
+            return False
 
     def takeTempSnapshot(self, asyncFlag = False):
         snapshotName = "PAYLOAD_TESTING-" + str(time.time()).split('.')[0]
-        return self.takeSnapshot(snapshotName, asyncFlag)
+        if self.takeSnapshot(snapshotName, asyncFlag):
+            return snapshotName
+        else:
+            return None
 
     def updateProcList(self):
         content = self.server.connection.RetrieveContent()
